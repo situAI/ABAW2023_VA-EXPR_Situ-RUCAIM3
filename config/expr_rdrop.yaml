@@ -1,0 +1,90 @@
+seed: 3407
+task: 'expr'
+
+
+train_data:
+  name: 'SequenceData'
+  args:
+    feat_root: '/data/ABAW5/Aff-Wild2/feat/'
+    label_root: '/data/ABAW5/Aff-Wild2/annotations/EXPR_Classification_Challenge/Train_Set'
+    seq_len: 128
+    task: 'expr'
+    pad_mode: 'repeat_last'
+    feat_dict:
+      mae: 768
+      ires100_8_expr: 512
+      affectnet: 342
+      ecapatdnn: 512
+      hubert: 512
+
+
+val_data:
+  name: 'SequenceData'
+  args:
+    feat_root: '/data/ABAW5/Aff-Wild2/feat/'
+    label_root: '/data/ABAW5/Aff-Wild2/annotations/EXPR_Classification_Challenge/Validation_Set_Adj/'
+    seq_len: 128
+    task: 'expr'
+    pad_mode: 'repeat_last'
+    feat_dict:
+      mae: 768
+      ires100_8_expr: 512
+      affectnet: 342
+      ecapatdnn: 512
+      hubert: 512
+
+
+dataloader:
+  batch_size: 8
+  num_workers: 4
+  pin_memory: true
+  collate_fn: 'base_collate_fn'
+
+
+model:
+  name: 'BERT'
+  args:
+    input_dim: 2646
+    feedforward_dim: 1024
+    affine_dim: 1024
+    nheads: 4
+    nlayers: 4
+    dropout: 0.3
+    use_pe: True
+    seq_len: 128
+    head_dropout: 0.3
+    head_dims:
+      - 512
+      - 256
+    out_dim: 8
+    task: 'expr'
+
+solver:
+  name: 'RDropSolver'
+  args:
+    epoch: 25
+
+  optimizer:
+    name: 'Adam'
+    args:
+      lr: !!float 1e-4
+      weight_decay: !!float 1e-5
+
+  lr_scheduler:
+    name: 'StepLR'
+    args:
+      step_size: 20
+      gamma: 0.1
+
+  loss:
+    name: 'RDropLoss'
+    args:
+      weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      alpha: 5
+
+  logger:
+    log_root: '/data/abaw5/log/'
+    suffix: 'expr'
+
+  metric:
+    name: 'ExprMetric'
